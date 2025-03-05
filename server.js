@@ -84,7 +84,7 @@ io.on("connection", (socket) => {
       const room = rooms[roomCode];
 
       io.to(roomCode).emit("roomDetails", {
-        players: room.players, // some issue here
+        //players: room.players, // some issue here
         category: room.category,
       });
     });
@@ -145,7 +145,7 @@ io.on("connection", (socket) => {
 
   // after guessing correctly, can't send messages
   // make it so only guesser can send messages
-  socket.on("chatMessage", ({ roomCode, message, username }) => {
+  socket.on("chatMessage", ({ roomCode, message, username, p1points, p2points }) => {
     const room = rooms[roomCode];
     if (room && room.players.includes(socket.id)) {
       console.log(`test: ${socket.id.substring(0, 6)}: ${message}`);
@@ -156,6 +156,7 @@ io.on("connection", (socket) => {
       });
 
       if (room.currentPrompt && message.toLowerCase().includes(room.currentPrompt.toLowerCase())) {
+        p1points += 1000
         io.to(roomCode).emit("chatMessage", {
           sender: "System",
           message: `${username} guessed correctly!`
