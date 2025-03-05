@@ -1,6 +1,19 @@
 <template>
+  
+
+
+
+
+  
   <div class="game-space">
     <div class="game-container">
+      <div class="leaderboard">
+        <h3>Points</h3>
+        <div class="leaderboard-container">
+          
+        </div>
+          
+        </div>
       <div class="game-info">
         <h1 v-if="!gameStarted">Welcome to Room {{ roomCode }}</h1>
         <p v-if="!gameStarted">Players in this room:</p>
@@ -17,10 +30,11 @@
         <!--<button @click="changeDrawer">Change Drawer</button> -->
 
         <!-- Will need to make a side tab on left for points display, also need to discuss how points will be awarded-->
-        <h3 v-if="gameStarted">Player 1's Points</h3>
-        <h3 v-if="gameStarted">Player 2's Points</h3>
         <Canvas v-if="gameStarted"></Canvas>
       </div>
+
+
+      
 
       <div class="chat-container">
         <h3>Chat</h3>
@@ -191,6 +205,27 @@ export default defineComponent({
   overflow-y: auto;
 }
 
+
+.leaderboard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-right : 1px solid #ccc;
+  padding: 10px;
+  min-width: 50px;
+  max-width: 100px;
+  height: 100%;
+}
+.leaderboard-container {
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  max-height: 300px;
+}
 .chat-container {
   flex: 1;
   display: flex;
