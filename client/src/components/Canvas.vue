@@ -225,7 +225,7 @@ const setPixelColour = (x: number, y: number, colour: string) => {
     <button ref="penBtn">Pen</button>
     <button ref="eraserBtn">Eraser</button>
     <button ref="fillBtn">Fill</button>
-    <button ref="shareBtn">Share Canvas</button>
+    <!--<button ref="shareBtn">Share Canvas</button> -->
   </div>
 </template>
 
