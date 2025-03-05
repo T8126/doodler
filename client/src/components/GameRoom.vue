@@ -12,9 +12,13 @@
           <li v-for="player in players" :key="player">{{ player }}</li>
         </ul>
         -->
-        <button @click="start">Start</button>
-        <button @click="getPrompt">Get Prompt</button>
-        <button @click="changeDrawer">Change Drawer</button>
+        <button @click="start" :disabled="!username">Start</button>
+        <button @click="getPrompt" :disabled="!username">Get Prompt</button>
+        <!--<button @click="changeDrawer">Change Drawer</button> -->
+
+        <!-- Will need to make a side tab on left for points display, also need to discuss how points will be awarded-->
+        <h3 v-if="gameStarted">Player 1's Points</h3>
+        <h3 v-if="gameStarted">Player 2's Points</h3>
         <Canvas v-if="gameStarted"></Canvas>
       </div>
 
@@ -49,6 +53,8 @@ import type { Ref } from "vue";
 import { useRoute } from "vue-router";
 import { useSocket } from "../socket.ts";
 
+
+  
 interface Message {
   sender: string;
   text: string;
@@ -62,7 +68,7 @@ export default defineComponent({
     const gameStarted = ref(false);
     const players = ref<string[]>([]);
     let category: string;
-    const username = ref("")
+    const username = ref("");
     const gamePrompt = ref<string | null>(null);
     //console.log(username)
     //t
@@ -70,13 +76,15 @@ export default defineComponent({
     // use quotes or apostrophes but keep it consistent ;(
     const curmes = ref("");
     const messageContainer: Ref<HTMLDivElement | null> = ref(null);
+    var p1points = 0;
+    var p2points = 0;
 
     onMounted(() => {
       socket.emit("getRoomDetails", {roomCode});
     });
-
+    
     socket.on("roomDetails", (data) => {
-      players.value = data.players;
+      //players.value = data.players;
       category = data.category;
     });
 
@@ -100,6 +108,8 @@ export default defineComponent({
           roomCode,
           message: curmes.value,
           username: username.value,
+          p1points: p1points,
+          p2points: p2points,
         });
         curmes.value = "";
       }
@@ -129,7 +139,7 @@ export default defineComponent({
     socket.on("drawerChanged", (data) => {
       mes.value.push({
         sender: "System",
-        text: `new draw ${username}`
+        text: `New drawer: ${username.value}`
       });
       if (data.newDrawerId === socket.id) {
         /* fix it telling you as a pop-up message*/
