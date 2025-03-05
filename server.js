@@ -26,8 +26,16 @@ app.get("*", (req, res) => {
 
 const generateRoomCode = () => {
   // don't inlude 0s and Os because they can be confused (or choose font in frontend where they are easily distinguishable) - same thing for 1s and ls.
-  //ok yeah good point
-  return Math.random().toString(36).substr(2, 6).toUpperCase();
+  //ok yeah it replaces it with X now
+  const code = Math.random().toString(36).substr(2, 6).toUpperCase();
+  const validcode = code.replace(/[0O1l]/g, 'X');
+  if (code != validcode) {
+    console.log(`${code}, ${validcode}`)
+  }
+  return validcode;
+
+  
+  //return Math.random().toString(36).substr(2, 6).toUpperCase();
 };
 
 io.on("connection", (socket) => {
