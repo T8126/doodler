@@ -67,7 +67,7 @@ io.on("connection", (socket) => {
       }
 
       socket.join(roomCode);
-      console.log(`Player ${socket.id} joined ${roomCode}`)
+      console.log(`joined ${roomCode}`)
 
       room.players.push(socket.id);
 
@@ -135,50 +135,25 @@ io.on("connection", (socket) => {
     room.drawerIndex%=room.players.length;    
   });
 */
-  socket.on("chatMessage", ({ roomCode, message }) => {
+
+
+  // after guessing correctly, can't send messages
+  // make it so only guesser can send messages
+  socket.on("chatMessage", ({ roomCode, message, username }) => {
     const room = rooms[roomCode];
     if (room && room.players.includes(socket.id)) {
       console.log(`test: ${socket.id.substring(0, 6)}: ${message}`);
-      // we using socket id as the name but later we gotta do username
       io.to(roomCode).emit("chatMessage", {
-        sender: socket.id.substring(0, 6), // shortened id for display but yeah user in future
+        //sender: socket.id.substring(0, 6), 
+        sender: username, //
         message: message
       });
 
       if (room.currentPrompt && message.toLowerCase().includes(room.currentPrompt.toLowerCase())) {
         io.to(roomCode).emit("chatMessage", {
           sender: "System",
-          message: `${socket.id.substring(0, 6)} guessed correctly!`
+          message: `${username} guessed correctly!`
         });
-        room.drawerIndex++;
-        room.drawerIndex %= room.players.length;
-
-        io.to(roomCode).emit("drawerChanged", {
-          newDrawerIndex: room.drawerIndex,
-          newDrawerId: room.players[room.drawerIndex]
-        });
-
-        room.currentPrompt = null;
-      }
-    }
-  });
-
-  socket.on("chatMessage", ({ roomCode, message }) => {
-    const room = rooms[roomCode];
-    if (room && room.players.includes(socket.id)) {
-      console.log(`test: ${socket.id.substring(0, 6)}: ${message}`);
-      // we using socket id as the name but later we gotta do username
-      io.to(roomCode).emit("chatMessage", {
-        sender: socket.id.substring(0, 6), // shortened id for display but yeah user in future
-        message: message
-      });
-
-      if (room.currentPrompt && message.toLowerCase().includes(room.currentPrompt.toLowerCase())) {
-        io.to(roomCode).emit("chatMessage", {
-          sender: "System",
-          message: `${socket.id.substring(0, 6)} is correct!`
-        });
-
         room.drawerIndex++;
         room.drawerIndex %= room.players.length;
 
