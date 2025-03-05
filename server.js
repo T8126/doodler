@@ -49,7 +49,8 @@ io.on("connection", (socket) => {
       players: [],
       category: category,
       host: socket.id,
-      drawerIndex: 0
+      drawerIndex: 0,
+      currentPrompt: null
     };
 
     socket.emit("createdRoom", { roomCode });
@@ -77,7 +78,7 @@ io.on("connection", (socket) => {
       const room = rooms[roomCode];
 
       io.to(roomCode).emit("roomDetails", {
-        players: room.players,
+        players: room.players, // some issue here
         category: room.category,
       });
     });
@@ -94,7 +95,7 @@ io.on("connection", (socket) => {
       if (!room.players.includes(socket.id)) {
         return;
       }
-  
+
       console.log(`Room ${roomCode} started game`)
 
       io.to(roomCode).emit("gameStarted");
@@ -110,6 +111,8 @@ io.on("connection", (socket) => {
     if (room && room.category === category) {
       const prompt = gameLogic.prompt(category);
       if (prompt) {
+        // Store the current prompt in the room for guess checking
+        room.currentPrompt = prompt;
         io.to(roomCode).emit("newPrompt", prompt);
       } else {
         socket.emit("noPrompts", `no ${category}`);
@@ -125,11 +128,68 @@ io.on("connection", (socket) => {
       io.to(roomCode).emit("getImageData", imageData);
     }
   });
-
+/* not needed no more
   socket.on("changeDrawer", ({ roomCode }) => {
     let room = rooms[roomCode];
     room.drawerIndex++;
     room.drawerIndex%=room.players.length;    
+  });
+*/
+  socket.on("chatMessage", ({ roomCode, message }) => {
+    const room = rooms[roomCode];
+    if (room && room.players.includes(socket.id)) {
+      console.log(`test: ${socket.id.substring(0, 6)}: ${message}`);
+      // we using socket id as the name but later we gotta do username
+      io.to(roomCode).emit("chatMessage", {
+        sender: socket.id.substring(0, 6), // shortened id for display but yeah user in future
+        message: message
+      });
+
+      if (room.currentPrompt && message.toLowerCase().includes(room.currentPrompt.toLowerCase())) {
+        io.to(roomCode).emit("chatMessage", {
+          sender: "System",
+          message: `${socket.id.substring(0, 6)} guessed correctly!`
+        });
+        room.drawerIndex++;
+        room.drawerIndex %= room.players.length;
+
+        io.to(roomCode).emit("drawerChanged", {
+          newDrawerIndex: room.drawerIndex,
+          newDrawerId: room.players[room.drawerIndex]
+        });
+
+        room.currentPrompt = null;
+      }
+    }
+  });
+
+  socket.on("chatMessage", ({ roomCode, message }) => {
+    const room = rooms[roomCode];
+    if (room && room.players.includes(socket.id)) {
+      console.log(`test: ${socket.id.substring(0, 6)}: ${message}`);
+      // we using socket id as the name but later we gotta do username
+      io.to(roomCode).emit("chatMessage", {
+        sender: socket.id.substring(0, 6), // shortened id for display but yeah user in future
+        message: message
+      });
+
+      if (room.currentPrompt && message.toLowerCase().includes(room.currentPrompt.toLowerCase())) {
+        io.to(roomCode).emit("chatMessage", {
+          sender: "System",
+          message: `${socket.id.substring(0, 6)} is correct!`
+        });
+
+        room.drawerIndex++;
+        room.drawerIndex %= room.players.length;
+
+        io.to(roomCode).emit("drawerChanged", {
+          newDrawerIndex: room.drawerIndex,
+          newDrawerId: room.players[room.drawerIndex]
+        });
+
+        room.currentPrompt = null;
+      }
+    }
   });
 
   socket.on("disconnect", () => {
