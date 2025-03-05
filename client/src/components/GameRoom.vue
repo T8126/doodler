@@ -4,9 +4,14 @@
       <div class="game-info">
         <h1 v-if="!gameStarted">Welcome to Room {{ roomCode }}</h1>
         <p v-if="!gameStarted">Players in this room:</p>
+        <p v-if="!gameStarted">
+          <input v-model="username" placeholder="Enter Username" />
+        </p>
+        <!--
         <ul v-if="!gameStarted">
           <li v-for="player in players" :key="player">{{ player }}</li>
         </ul>
+        -->
         <button @click="start">Start</button>
         <button @click="getPrompt">Get Prompt</button>
         <button @click="changeDrawer">Change Drawer</button>
@@ -40,7 +45,7 @@
 </template>
 <script lang="ts">
 import { defineComponent, onBeforeUnmount, ref, onMounted } from "vue";
-import type { Ref } from 'vue';
+import type { Ref } from "vue";
 import { useRoute } from "vue-router";
 import { useSocket } from "../socket.ts";
 
@@ -57,9 +62,13 @@ export default defineComponent({
     const gameStarted = ref(false);
     const players = ref<string[]>([]);
     let category: string;
-
+    const username = ref("")
+    const gamePrompt = ref<string | null>(null);
+    //console.log(username)
+    //t
     const mes = ref<Message[]>([]);
-    const curmes = ref('');
+    // use quotes or apostrophes but keep it consistent ;(
+    const curmes = ref("");
     const messageContainer: Ref<HTMLDivElement | null> = ref(null);
 
     onMounted(() => {
@@ -71,6 +80,8 @@ export default defineComponent({
       category = data.category;
     });
 
+
+    
     const start = () => {
       socket.emit("startGame", {roomCode});
     };
@@ -78,23 +89,24 @@ export default defineComponent({
     const getPrompt = () => {
       socket.emit("getPrompt", {roomCode, category});
     }
-
+    // useless now
     const changeDrawer = () => {
       socket.emit("changeDrawer", {roomCode});
     }
-
+    //bugging
     const sendMessage = () => {
-      if (curmes.value.trim() !== '') {
+      if (curmes.value.trim() !== "") {
         socket.emit("chatMessage", {
           roomCode,
-          message: curmes.value
+          message: curmes.value,
+          username: username.value,
         });
-        curmes.value = '';
+        curmes.value = "";
       }
     };
 
     socket.on("newPrompt", (prompt) => {
-      alert(prompt);
+      gamePrompt.value = prompt;
     });
 
     socket.on("gameStarted", () => {
@@ -112,11 +124,12 @@ export default defineComponent({
         messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
       }
     });
+    //
     /* we might needa implement some cooldown for switching drawers*/
     socket.on("drawerChanged", (data) => {
       mes.value.push({
         sender: "System",
-        text: `new draw ${data.newDrawerId.substring(0, 6)}`
+        text: `new draw ${username}`
       });
       if (data.newDrawerId === socket.id) {
         /* fix it telling you as a pop-up message*/
@@ -141,7 +154,8 @@ export default defineComponent({
       mes,
       curmes,
       sendMessage,
-      messageContainer
+      messageContainer,
+      username
     };
   },
 });
