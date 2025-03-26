@@ -1,16 +1,15 @@
 <template>
-  
-
-
-
-
-  
   <div class="game-space">
     <div class="game-container">
       <div class="leaderboard">
         <h3>Points</h3>
         <div class="leaderboard-container">
-          
+          <div 
+            v-for="(player, i) in leaderboard" 
+            :key="i" 
+            class="message">
+            <strong>{{ player.username }}:</strong> {{ player.points }}
+          </div>
         </div>
           
         </div>
@@ -66,12 +65,18 @@ import { defineComponent, onBeforeUnmount, ref, onMounted } from "vue";
 import type { Ref } from "vue";
 import { useRoute } from "vue-router";
 import { useSocket } from "../socket.ts";
+//import type { StringMappingType } from "typescript";
 
 
   
 interface Message {
   sender: string;
   text: string;
+}
+
+interface Leaderboard {
+  username: string;
+  points: number;
 }
 
 export default defineComponent({
@@ -86,23 +91,35 @@ export default defineComponent({
     const gamePrompt = ref<string | null>(null);
     //console.log(username)
     //t
+    const leaderboard = ref<Leaderboard[]>([]);
     const mes = ref<Message[]>([]);
     // use quotes or apostrophes but keep it consistent ;(
     const curmes = ref("");
     const messageContainer: Ref<HTMLDivElement | null> = ref(null);
-    var p1points = 0;
-    var p2points = 0;
 
     onMounted(() => {
       socket.emit("getRoomDetails", {roomCode});
     });
     
     socket.on("roomDetails", (data) => {
-      //players.value = data.players;
+      console.log("received room details!")
+      leaderboard.value.length = 0; // clear array
+      data.players.forEach((player: string) => {
+        leaderboard.value.push({
+          username: player,
+          points: 0,
+        })
+      });
       category = data.category;
     });
 
-
+    socket.on("updatePoints", (data) => {
+      leaderboard.value.forEach((player) => {
+        if (player.username == data.player) {
+          player.points = data.points;
+        }
+      });
+    });
     
     const start = () => {
       socket.emit("startGame", {roomCode});
@@ -122,8 +139,6 @@ export default defineComponent({
           roomCode,
           message: curmes.value,
           username: username.value,
-          p1points: p1points,
-          p2points: p2points,
         });
         curmes.value = "";
       }
@@ -176,6 +191,7 @@ export default defineComponent({
       getPrompt,
       changeDrawer,
       mes,
+      leaderboard,
       curmes,
       sendMessage,
       messageContainer,
@@ -210,7 +226,7 @@ export default defineComponent({
   flex: 1;
   display: flex;
   flex-direction: column;
-  border-right : 1px solid #ccc;
+  border-right : 4px solid #ccc;
   padding: 10px;
   min-width: 50px;
   max-width: 100px;
@@ -220,7 +236,7 @@ export default defineComponent({
   flex-grow: 1;
   overflow-y: auto;
   margin-bottom: 10px;
-  border: 1px solid #ccc;
+  border: 4px solid #ccc;
   border-radius: 4px;
   padding: 10px;
   background-color: #f9f9f9;
@@ -230,7 +246,7 @@ export default defineComponent({
   flex: 1;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid #ccc;
+  border-left: 4px solid #ccc;
   padding: 10px;
   min-width: 250px;
   max-width: 400px;
@@ -241,7 +257,7 @@ export default defineComponent({
   flex-grow: 1;
   overflow-y: auto;
   margin-bottom: 10px;
-  border: 1px solid #ccc;
+  border: 4px solid #ccc;
   border-radius: 4px;
   padding: 10px;
   background-color: #f9f9f9;

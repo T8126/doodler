@@ -53,6 +53,7 @@ io.on("connection", (socket) => {
     rooms[roomCode] = {
       roomCode: roomCode,
       players: [],
+      points: {},
       category: category,
       host: socket.id,
       drawerIndex: 0,
@@ -76,15 +77,17 @@ io.on("connection", (socket) => {
       console.log(`joined ${roomCode}`)
 
       room.players.push(socket.id);
+      room.points[socket.id] = 0;
 
       socket.emit("joinedRoom", { roomCode });
     });
 
     socket.on("getRoomDetails", ({roomCode}) => {
+      console.log("sent room details!")
       const room = rooms[roomCode];
 
       io.to(roomCode).emit("roomDetails", {
-        //players: room.players, // some issue here
+        players: room.players,
         category: room.category,
       });
     });
@@ -145,7 +148,7 @@ io.on("connection", (socket) => {
 
   // after guessing correctly, can't send messages
   // make it so only guesser can send messages
-  socket.on("chatMessage", ({ roomCode, message, username, p1points, p2points }) => {
+  socket.on("chatMessage", ({ roomCode, message, username }) => {
     const room = rooms[roomCode];
     if (room && room.players.includes(socket.id)) {
       console.log(`test: ${socket.id.substring(0, 6)}: ${message}`);
@@ -156,11 +159,19 @@ io.on("connection", (socket) => {
       });
 
       if (room.currentPrompt && message.toLowerCase().includes(room.currentPrompt.toLowerCase())) {
-        p1points += 1000
+        console.log("guessed prompt")
         io.to(roomCode).emit("chatMessage", {
           sender: "System",
           message: `${username} guessed correctly!`
         });
+        let drawer = room.players[room.drawerIndex];
+        room.points[drawer] += 1000;
+
+        io.to(roomCode).emit("updatePoints", {
+          player: drawer,
+          points: room.points[drawer],
+        });
+
         room.drawerIndex++;
         room.drawerIndex %= room.players.length;
 
@@ -179,6 +190,7 @@ io.on("connection", (socket) => {
       const room = rooms[roomCode];
       if (room && room.players.includes(socket.id)) {
         room.players = room.players.filter((id) => id !== socket.id);
+        delete room.points[socket.id]
         if (room.players.length === 0) {
           delete rooms[roomCode];
         }

@@ -28,6 +28,7 @@ socket.on("joinRoomError", (data) => {
 });
 
 socket.on("joinedRoom", (data) => {
+  console.log("received");
   router.push({ name: "GameRoom", params: { roomCode: data.roomCode } });
 });
 </script>
