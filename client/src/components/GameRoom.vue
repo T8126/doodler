@@ -63,8 +63,9 @@
 <script lang="ts">
 import { defineComponent, onBeforeUnmount, ref, onMounted } from "vue";
 import type { Ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { useSocket } from "../socket.ts";
+
 //import type { StringMappingType } from "typescript";
 
 
@@ -81,7 +82,9 @@ interface Leaderboard {
 
 export default defineComponent({
   setup() {
+    const router = useRouter();
     const route = useRoute();
+
     const roomCode = route.params.roomCode as string;
     const socket = useSocket();
     const gameStarted = ref(false);
@@ -119,6 +122,10 @@ export default defineComponent({
           player.points = data.points;
         }
       });
+    });
+
+    socket.on("gameFinished", () => {
+      router.push("/finished");
     });
     
     const start = () => {

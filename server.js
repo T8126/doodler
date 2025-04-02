@@ -57,7 +57,9 @@ io.on("connection", (socket) => {
       category: category,
       host: socket.id,
       drawerIndex: 0,
-      currentPrompt: null
+      currentPrompt: null,
+      totalRounds: 3,
+      currentRound: 1,
     };
 
     socket.emit("createdRoom", { roomCode });
@@ -174,6 +176,14 @@ io.on("connection", (socket) => {
 
         room.drawerIndex++;
         room.drawerIndex %= room.players.length;
+
+        if (room.drawerIndex == 0) {
+          room.currentRound += 1
+          if (room.currentRound > room.totalRounds) {
+            io.to(roomCode).emit("gameFinished", ({ points: room.points }));
+            delete rooms[roomCode];
+          }
+        }
 
         io.to(roomCode).emit("drawerChanged", {
           newDrawerIndex: room.drawerIndex,
