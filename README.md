@@ -2,5 +2,3 @@
 
 Grade 12 Computer Science Project
 
-## Installs
-
