@@ -15,7 +15,7 @@
         </div>
       <div class="game-info">
         <h1 v-if="!gameStarted">Welcome to Room {{ roomCode }}</h1>
-        <!--<p v-if="!gameStarted">Players in this room:</p> -->
+        <p v-if="!gameStarted">Players in this room:</p>
         <p v-if="!gameStarted">
           <input v-model="username" placeholder="Enter Username" />
         </p>
@@ -25,6 +25,7 @@
         </ul>
         -->
         <button @click="start" :disabled="!username">Start</button>
+        <!-- do a v-if here to check if they are drawer, we need to make the distinction-->
         <button @click="getPrompt" :disabled="!username">Get Prompt</button>
         <!--<button @click="changeDrawer">Change Drawer</button> -->
 
@@ -96,8 +97,10 @@ export default defineComponent({
     //t
     const leaderboard = ref<Leaderboard[]>([]);
     const mes = ref<Message[]>([]);
+    // use quotes or apostrophes but keep it consistent ;(
     const curmes = ref("");
     const messageContainer: Ref<HTMLDivElement | null> = ref(null);
+    //const drawer = ref("");
 
     onMounted(() => {
       socket.emit("getRoomDetails", {roomCode});
@@ -108,7 +111,6 @@ export default defineComponent({
       leaderboard.value.length = 0; // clear array
       data.players.forEach((player: string) => {
         leaderboard.value.push({
-          // shows socket id?
           username: player,
           points: 0,
         })
@@ -176,8 +178,10 @@ export default defineComponent({
       mes.value.push({
         sender: "System",
         text: `New drawer: ${username.value}`
+        //drawer = username.value
       });
       if (data.newDrawerId === socket.id) {
+        /* fix it telling you as a pop-up message*/
         getPrompt();
       }
     });
@@ -201,7 +205,7 @@ export default defineComponent({
       curmes,
       sendMessage,
       messageContainer,
-      username,
+      username
     };
   },
 });

@@ -89,7 +89,7 @@ io.on("connection", (socket) => {
       const room = rooms[roomCode];
 
       io.to(roomCode).emit("roomDetails", {
-        players : room.players,
+        players: room.players,
         category: room.category,
       });
     });
@@ -154,13 +154,11 @@ io.on("connection", (socket) => {
     const room = rooms[roomCode];
     if (room && room.players.includes(socket.id)) {
       console.log(`test: ${socket.id.substring(0, 6)}: ${message}`);
-      /*if (!room.players[username] == room.players[room.drawerIndex]) */
       io.to(roomCode).emit("chatMessage", {
         //sender: socket.id.substring(0, 6), 
         sender: username, //
         message: message
       });
-      
 
       if (room.currentPrompt && message.toLowerCase().includes(room.currentPrompt.toLowerCase())) {
         console.log("guessed prompt")
