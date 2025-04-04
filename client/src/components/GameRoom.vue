@@ -27,9 +27,8 @@
         <button @click="start" :disabled="!username">Start</button>
         <!-- do a v-if here to check if they are drawer, we need to make the distinction-->
         <button @click="getPrompt" :disabled="!username">Get Prompt</button>
-        <!--<button @click="changeDrawer">Change Drawer</button> -->
 
-        <div v-if="gameStarted" class="prompt-box">Prompt: {{ gamePrompt }}</div>
+        <div v-if="gameStarted && isDrawer" class="prompt-box">Prompt: {{ gamePrompt }}</div>
 
         <!-- Will need to make a side tab on left for points display, also need to discuss how points will be awarded-->
         <Canvas v-if="gameStarted"></Canvas>
@@ -50,7 +49,7 @@
             <strong>{{ message.sender }}:</strong> {{ message.text }}
           </div>
         </div>
-        <div class="input-container">
+        <div v-if="!isDrawer" class="input-container">
           <input 
             v-model="curmes" 
             @keyup.enter="sendMessage" 
@@ -68,10 +67,6 @@ import { defineComponent, onBeforeUnmount, ref, onMounted } from "vue";
 import type { Ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useSocket } from "../socket.ts";
-
-//import type { StringMappingType } from "typescript";
-
-
   
 interface Message {
   sender: string;
@@ -95,15 +90,13 @@ export default defineComponent({
     let category: string;
     const username = ref("");
     const gamePrompt = ref<string | null>(null);
-    //console.log(username)
-    //t
     const leaderboard = ref<Leaderboard[]>([]);
     const mes = ref<Message[]>([]);
     // use quotes or apostrophes but keep it consistent ;(
     // mb lol - i usually use quotes
     const curmes = ref("");
     const messageContainer: Ref<HTMLDivElement | null> = ref(null);
-    //const drawer = ref("");
+    const isDrawer = ref(false);
 
     onMounted(() => {
       socket.emit("getRoomDetails", {roomCode});
@@ -119,6 +112,12 @@ export default defineComponent({
         })
       });
       category = data.category;
+
+      if (data.drawerId == socket.id) {
+        isDrawer.value = true;
+      } else {
+        isDrawer.value = false;
+      }
     });
 
     socket.on("updatePoints", (data) => {
@@ -139,10 +138,6 @@ export default defineComponent({
 
     const getPrompt = () => {
       socket.emit("getPrompt", {roomCode, category});
-    }
-    // useless now
-    const changeDrawer = () => {
-      socket.emit("changeDrawer", {roomCode});
     }
     //bugging
     const sendMessage = () => {
@@ -166,7 +161,6 @@ export default defineComponent({
     });
 
     socket.on("chatMessage", (data) => {
-      // console.log(data);
       mes.value.push({
         sender: data.sender,
         text: data.message
@@ -184,8 +178,11 @@ export default defineComponent({
         //drawer = username.value
       });
       if (data.newDrawerId === socket.id) {
+        isDrawer.value = true;
         /* fix it telling you as a pop-up message*/
         getPrompt();
+      } else {
+        isDrawer.value = false;
       }
     });
 
@@ -201,8 +198,8 @@ export default defineComponent({
       players,
       start,
       gameStarted,
+      isDrawer,
       getPrompt,
-      changeDrawer,
       mes,
       leaderboard,
       curmes,

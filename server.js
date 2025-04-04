@@ -91,6 +91,7 @@ io.on("connection", (socket) => {
       io.to(roomCode).emit("roomDetails", {
         players: room.players,
         category: room.category,
+        drawerId: room.players[room.drawerIndex]
       });
     });
 
@@ -139,14 +140,6 @@ io.on("connection", (socket) => {
       io.to(roomCode).emit("getImageData", imageData);
     }
   });
-/* not needed no more
-  socket.on("changeDrawer", ({ roomCode }) => {
-    let room = rooms[roomCode];
-    room.drawerIndex++;
-    room.drawerIndex%=room.players.length;    
-  });
-*/
-
 
   // after guessing correctly, can't send messages
   // make it so only guesser can send messages
