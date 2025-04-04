@@ -14,7 +14,6 @@ const eraserBtn = ref<HTMLButtonElement | null>(null);
 const fillBtn = ref<HTMLButtonElement | null>(null);
 const weightSlider = ref<HTMLInputElement | null>(null);
 const shareBtn = ref<HTMLInputElement | null>(null);
-const prompt = ref("Prompt: dog");
 
 let tool = "pen";
 let ctx: CanvasRenderingContext2D | null = null;
@@ -36,10 +35,6 @@ const shareCanvas = () => {
   }
   socket.emit("canvasImageData", {roomCode, imageData});
 };
-
-socket.on("newPrompt", (data: string) => {
-  prompt.value = `Prompt: ${data}`;
-});
 
 socket.on("getImageData", (data) => {
   let array = new Uint8ClampedArray(data);
@@ -217,7 +212,6 @@ const setPixelColour = (x: number, y: number, colour: string) => {
 
 <template>
   <div>
-    <div class="prompt-box">{{ prompt }}</div>
     <canvas ref="canvas"></canvas>
     <br />
     <input type="color" ref="colourPicker" />
@@ -233,15 +227,5 @@ const setPixelColour = (x: number, y: number, colour: string) => {
 canvas {
   border: 1px solid black;
   background-color: white;
-}
-.prompt-box {
-  color: black;
-  font-size: 18px;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 10px;
-  padding: 10px;
-  background-color: #f0f0f0;
-  border-radius: 5px;
 }
 </style>

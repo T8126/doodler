@@ -29,6 +29,8 @@
         <button @click="getPrompt" :disabled="!username">Get Prompt</button>
         <!--<button @click="changeDrawer">Change Drawer</button> -->
 
+        <div v-if="gameStarted" class="prompt-box">Prompt: {{ gamePrompt }}</div>
+
         <!-- Will need to make a side tab on left for points display, also need to discuss how points will be awarded-->
         <Canvas v-if="gameStarted"></Canvas>
       </div>
@@ -98,6 +100,7 @@ export default defineComponent({
     const leaderboard = ref<Leaderboard[]>([]);
     const mes = ref<Message[]>([]);
     // use quotes or apostrophes but keep it consistent ;(
+    // mb lol - i usually use quotes
     const curmes = ref("");
     const messageContainer: Ref<HTMLDivElement | null> = ref(null);
     //const drawer = ref("");
@@ -205,7 +208,8 @@ export default defineComponent({
       curmes,
       sendMessage,
       messageContainer,
-      username
+      username,
+      gamePrompt
     };
   },
 });
@@ -231,6 +235,16 @@ export default defineComponent({
   overflow-y: auto;
 }
 
+.prompt-box {
+  color: black;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+}
 
 .leaderboard {
   flex: 1;
