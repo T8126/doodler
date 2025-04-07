@@ -78,7 +78,10 @@ io.on("connection", (socket) => {
       socket.join(roomCode);
       console.log(`joined ${roomCode}`)
 
-      room.players.push(socket.id);
+      room.players.push({socketId: socket.id, username: null});
+      //socket.emit("setUsername", { roomCode, username: username.value});
+
+      
       room.points[socket.id] = 0;
 
       socket.emit("joinedRoom", { roomCode });
@@ -89,9 +92,9 @@ io.on("connection", (socket) => {
       const room = rooms[roomCode];
 
       io.to(roomCode).emit("roomDetails", {
-        players: room.players,
+        players: room.players.map(players => players.username || players.socketId),
         category: room.category,
-        drawerId: room.players[room.drawerIndex]
+        drawerId: room.players[room.drawerIndex]?.socketId
       });
     });
 
@@ -104,7 +107,7 @@ io.on("connection", (socket) => {
         return;
       }
 
-      if (!room.players.includes(socket.id)) {
+      if (!room.players.find(players => players.socketId === socket.id)) {
         return;
       }
 
@@ -141,6 +144,26 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("setUser", ({ roomCode, username}) => {
+    const room = rooms[roomCode];
+    if (!room) {
+      return;
+    }
+    const player = room.players.find(players => players.socketId === socket.id)
+    if(player) {
+      player.username = username;
+    }
+
+    io.to(roomCode).emit("roomDetails", {
+      players: room.players.map(players => players.username || players.socketId),
+      category: room.category,
+      drawerId: room.players[room.drawerIndex]?.socketId,
+    })
+    
+  });
+
+
+  
   // after guessing correctly, can't send messages
   // make it so only guesser can send messages
   socket.on("chatMessage", ({ roomCode, message, username }) => {
@@ -180,7 +203,7 @@ io.on("connection", (socket) => {
 
         io.to(roomCode).emit("drawerChanged", {
           newDrawerIndex: room.drawerIndex,
-          newDrawerId: room.players[room.drawerIndex]
+          newDrawerId: room.players[room.drawerIndex]?.socketId
         });
 
         room.currentPrompt = null;
