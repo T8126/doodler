@@ -4,7 +4,7 @@
       <div class="leaderboard">
         <h3>Points</h3>
         <div class="leaderboard-container">
-          <div 
+          <div v-if="gameStarted" 
             v-for="(player, i) in leaderboard" 
             :key="i" 
             class="message">
@@ -134,6 +134,7 @@ export default defineComponent({
     
     const start = () => {
       socket.emit("startGame", {roomCode});
+      socket.emit("setUser", {roomCode, username: username.value})
     };
 
     const getPrompt = () => {
