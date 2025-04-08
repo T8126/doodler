@@ -139,7 +139,7 @@ io.on("connection", (socket) => {
 
   socket.on("canvasImageData", ({ roomCode, imageData }) => {
     let room = rooms[roomCode];
-    if (socket.id == room.players[room.drawerIndex]) { /* if socket request is from drawer */
+    if (socket.id == room.players[room.drawerIndex]?.socketId) { /* if socket request is from drawer */
       io.to(roomCode).emit("getImageData", imageData);
     }
   });
