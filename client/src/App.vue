@@ -47,6 +47,7 @@ const { isSignedIn } = useUser(); */
 </template>
 
 <style scoped>
+  /* css was inspired by other works(cartoony effect, animations)*/
 * {
   margin: 0;
   padding: 0;
@@ -56,6 +57,14 @@ const { isSignedIn } = useUser(); */
 }
 
 body, html {
+  background: repeating-radial-gradient(
+    circle at random(100%) random (100%),
+    #ff6ec7 0,
+    #ff6ec7 5px,
+    transparent 5px,
+    transparent 10px,
+  );
+  
   height: 100vh;
   width: 100vw;
   display: flex;
@@ -64,6 +73,7 @@ body, html {
 }
 
 #app {
+  /* find some svg for more cartoony background for later, ask george what he would like*/
   background: rgba(255, 255, 255, 0.9);
   border-radius: 15px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
@@ -80,8 +90,9 @@ header {
   background-color: #34495e;
   color: #fff;
   padding: 50px 20px;
-  border-radius: 10px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  border: 4px solid #000;
+  border-radius: 20px;
+  box-shadow: 5px 5px 0px #000;
   flex-shrink: 0;
   width: 100%;
   flex-grow: 0;
@@ -94,20 +105,21 @@ h1 {
 }
 
 button {
-  background: linear-gradient(45deg, #ff6ec7, #ff9a44);
-  color: white;
+  background: #ffdf00;
   padding: 15px 30px;
-  border: none;
-  border-radius: 50px;
-  font-size: 1rem;
+  border: 4px solid #000;
+  box-shadow: 2px 2px 0px #000;
+  border-radius: 15px;
+  font-size: 1.2rem;
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 button:hover {
   background: linear-gradient(45deg, #ff9a44, #ff6ec7);
+  background-color: #ffe066;
   transform: scale(1.1);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 3px 3px 0px #000;
 }
 
 button:focus {
@@ -158,12 +170,12 @@ button:focus {
 
 
 .art-space {
-  position: relative;
-  margin-top: 150px; 
-  width: 100%;
-  height: 100%;
-  background: #FFFFFF;
-  border-radius: 10px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
   overflow: hidden;
 }
 
@@ -171,11 +183,36 @@ button:focus {
   position: absolute;
   background: rgba(255, 77, 122, 0.7);
   border-radius: 50%;
-  opacity: 0.8;
-  transform: rotate(0deg);
-  animation: paint-effect 3s linear infinite;
+  animation: bounce 10s linear infinite alternate;
+}
+/* u can play around with these values(%) if you want @tim*/
+@keyframes bounce {
+  0% {
+    transform: translate(0, 0) rotate (0deg);
+    top: 10%;
+    left: 10%;
+  }
+  25% {
+    top: 20%;
+    left: 70%;
+  }
+  50% {
+    top: 80%;
+    left: 60%;
+  }
+  75% {
+    top: 50%;
+    left: 20%;
+  }
+  100% {
+    top: 30%;
+    left: 90%;
+    transform: rotate(720deg);
+  }
 }
 
+
+  
 .paint-splatter.large {
   width: 150px;
   height: 150px;
@@ -208,7 +245,7 @@ button:focus {
   left: 20%;
   top: 70%;
 }
-
+/* useless now, if we want to revert back to this it is always here*/
 @keyframes paint-effect {
   0% {
     transform: translate(0, 0) rotate(0deg);
