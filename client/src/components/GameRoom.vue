@@ -63,7 +63,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onBeforeUnmount, ref, onMounted } from "vue";
+import { defineComponent, onBeforeUnmount, ref, onMounted, watch } from "vue";
 import type { Ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useSocket } from "../socket.ts";
@@ -101,6 +101,10 @@ export default defineComponent({
     onMounted(() => {
       socket.emit("getRoomDetails", {roomCode});
     });
+    watch(username, (user) => {
+      socket.emit("setUser", {roomCode, username: user})
+    });
+
     
     socket.on("roomDetails", (data) => {
       console.log("received room details!")
@@ -134,7 +138,7 @@ export default defineComponent({
     
     const start = () => {
       socket.emit("startGame", {roomCode});
-      socket.emit("setUser", {roomCode, username: username.value})
+      //socket.emit("setUser", {roomCode, username: username.value})
     };
 
     const getPrompt = () => {
