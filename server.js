@@ -175,8 +175,7 @@ io.on("connection", (socket) => {
         sender: username, //
         message: message
       });
-
-      if (room.currentPrompt && message.toLowerCase().includes(room.currentPrompt.toLowerCase())) {
+      if (room.currentPrompt && message.toLowerCase().includes(room.currentPrompt.toLowerCase()) && socket.id != room.players[room.drawerIndex].socketId) {
         console.log("guessed prompt")
         io.to(roomCode).emit("chatMessage", {
           sender: "System",
@@ -203,7 +202,8 @@ io.on("connection", (socket) => {
 
         io.to(roomCode).emit("drawerChanged", {
           newDrawerIndex: room.drawerIndex,
-          newDrawerId: room.players[room.drawerIndex]?.socketId
+          newDrawerId: room.players[room.drawerIndex]?.socketId,
+          newDrawerName: room.players[room.drawerIndex]?.username
         });
 
         room.currentPrompt = null;

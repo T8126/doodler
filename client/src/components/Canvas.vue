@@ -46,10 +46,16 @@ const shareCanvas = () => {
 
 // receive canvas data from server and display it
 socket.on("getImageData", (data) => {
-  console.log("putting image data")
   let array = new Uint8ClampedArray(data);
   let imageData = new ImageData(array, 500);
   if (ctx) ctx.putImageData(imageData, 0, 0);
+});
+
+// clear canvas when drawer changes
+socket.on("drawerChanged", () => {
+  if (!ctx) return;
+  ctx.fillStyle = "rgb(255, 255, 255)";
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 });
 
 // setup

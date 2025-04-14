@@ -179,8 +179,7 @@ export default defineComponent({
     socket.on("drawerChanged", (data) => {
       mes.value.push({
         sender: "System",
-        text: `New drawer: ${username.value}`
-        //drawer = username.value
+        text: `New drawer: ${data.newDrawerName}`
       });
       if (data.newDrawerId === socket.id) {
         isDrawer.value = true;
