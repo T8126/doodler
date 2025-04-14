@@ -182,7 +182,7 @@ io.on("connection", (socket) => {
           message: `${username} guessed correctly!`
         });
         let drawer = room.players[room.drawerIndex];
-        room.points[drawer] += 1000;
+        room.points[drawer.socketId] += 1000;
 
         io.to(roomCode).emit("updatePoints", {
           player: drawer.username,

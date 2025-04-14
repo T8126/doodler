@@ -125,6 +125,7 @@ export default defineComponent({
     });
 
     socket.on("updatePoints", (data) => {
+      console.log(data)
       leaderboard.value.forEach((player) => {
         if (player.username == data.player) {
           player.points = data.points;
