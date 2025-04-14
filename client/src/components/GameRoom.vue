@@ -49,7 +49,7 @@
             <strong>{{ message.sender }}:</strong> {{ message.text }}
           </div>
         </div>
-        <div v-if="!isDrawer" class="input-container">
+        <div class="input-container">
           <input 
             v-model="curmes" 
             @keyup.enter="sendMessage" 
