@@ -168,7 +168,7 @@ io.on("connection", (socket) => {
   // make it so only guesser can send messages
   socket.on("chatMessage", ({ roomCode, message, username }) => {
     const room = rooms[roomCode];
-    if (room && room.players.includes(socket.id)) {
+    if (room && room.players.find(players => players.socketId === socket.id)) {
       console.log(`test: ${socket.id.substring(0, 6)}: ${message}`);
       io.to(roomCode).emit("chatMessage", {
         //sender: socket.id.substring(0, 6), 
@@ -186,8 +186,8 @@ io.on("connection", (socket) => {
         room.points[drawer] += 1000;
 
         io.to(roomCode).emit("updatePoints", {
-          player: drawer,
-          points: room.points[drawer],
+          player: drawer.username,
+          points: room.points[drawer.socketId],
         });
 
         room.drawerIndex++;
@@ -214,7 +214,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     for (const roomCode in rooms) {
       const room = rooms[roomCode];
-      if (room && room.players.includes(socket.id)) {
+      if (room && room.players.find(players => players.socketId === socket.id)) {
         room.players = room.players.filter((id) => id !== socket.id);
         delete room.points[socket.id]
         if (room.players.length === 0) {
