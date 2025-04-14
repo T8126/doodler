@@ -54,8 +54,10 @@ socket.on("getImageData", (data) => {
 // clear canvas when drawer changes
 socket.on("drawerChanged", () => {
   if (!ctx) return;
+  let temp = ctx.fillStyle;
   ctx.fillStyle = "rgb(255, 255, 255)";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+  ctx.fillStyle = temp;
 });
 
 // setup
