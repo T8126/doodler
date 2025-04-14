@@ -7,27 +7,35 @@ const socket = useSocket();
 const route = useRoute();
 const roomCode = route.params.roomCode as string;
 
+// access elements through refs
 const canvas = ref<HTMLCanvasElement | null>(null);
 const colourPicker = ref<HTMLInputElement | null>(null);
 const penBtn = ref<HTMLButtonElement | null>(null);
 const eraserBtn = ref<HTMLButtonElement | null>(null);
 const fillBtn = ref<HTMLButtonElement | null>(null);
 const weightSlider = ref<HTMLInputElement | null>(null);
-const shareBtn = ref<HTMLInputElement | null>(null);
 
+// current selected tool
 let tool = "pen";
+
+// canvas context
 let ctx: CanvasRenderingContext2D | null = null;
+
+// tool weight
 let weight = 5;
 
+// canvas size
 const canvasWidth = 500;
 const canvasHeight = 500;
 
+// mouse info
 let mouseX = 0;
 let mouseY = 0;
 let mouseDown = false;
 let lastX = 0;
 let lastY = 0;
 
+// send canvas data to server
 const shareCanvas = () => {
   let imageData;
   if (ctx) {
@@ -36,12 +44,15 @@ const shareCanvas = () => {
   socket.emit("canvasImageData", {roomCode, imageData});
 };
 
+// receive canvas data from server and display it
 socket.on("getImageData", (data) => {
+  console.log("putting image data")
   let array = new Uint8ClampedArray(data);
   let imageData = new ImageData(array, 500);
   if (ctx) ctx.putImageData(imageData, 0, 0);
 });
 
+// setup
 onMounted(() => {
   if (!canvas.value) return;
 
@@ -52,59 +63,65 @@ onMounted(() => {
 
   if (!ctx) return;
 
+  // fill canvas with white
   ctx.fillStyle = "rgb(255, 255, 255)";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
+  // add event listeners to each button to change tool if clicked
   if (penBtn.value) penBtn.value.addEventListener("click", () => (tool = "pen"));
   if (eraserBtn.value) eraserBtn.value.addEventListener("click", () => (tool = "eraser"));
   if (fillBtn.value) fillBtn.value.addEventListener("click", () => (tool = "fill"));
-  if (shareBtn.value) shareBtn.value.addEventListener("click", () => {
-    shareCanvas();
-  });
 
+  // change colour if selected in colour picker
   if (colourPicker.value) colourPicker.value.addEventListener("input", () => {
     if (ctx) ctx.fillStyle = colourPicker.value!.value;
   });
 
+  // change tool weight if slider moved
   if (weightSlider.value) weightSlider.value.addEventListener("input", () => {
     weight = parseInt(weightSlider.value!.value);
   });
 
+  // add event listeners - some added to document in cases where mouse is released outside of canvas
   canvas.value.addEventListener("mousedown", onMouseDown);
-  document.addEventListener("mouseup", () => (mouseDown = false));
+  document.addEventListener("mouseup", onMouseUp);
   document.addEventListener("mousemove", onMouseMove);
 
+  // set default colour
   ctx.fillStyle = colourPicker.value!.value;
 });
 
 onBeforeUnmount(() => {
   if (!canvas.value) return;
 
+  // remove event listeners on unmount
   canvas.value.removeEventListener("mousedown", onMouseDown);
   document.removeEventListener("mouseup", () => (mouseDown = false));
   document.removeEventListener("mousemove", onMouseMove);
 });
 
 const onMouseDown = (event: MouseEvent) => {
+  if (!ctx || !canvas.value) return;
+
+  // update mouse info
+  const rect = canvas.value.getBoundingClientRect();
+
+  mouseX = Math.round(event.clientX - rect.left);
+  mouseY = Math.round(event.clientY - rect.top);
   mouseDown = true;
   lastX = mouseX;
   lastY = mouseY;
 
-  if (!ctx || !canvas.value) return;
-
-  const rect = canvas.value.getBoundingClientRect();
-  mouseX = Math.round(event.clientX - rect.left);
-  mouseY = Math.round(event.clientY - rect.top);
-
+  // behaviour of each tool on mouse down
   if (tool == "pen") {
     ctx.fillRect(mouseX - weight / 2, mouseY - weight / 2, weight, weight);
   }
 
   if (tool == "eraser") {
-    let og = ctx.fillStyle;
+    let temp = ctx.fillStyle;
     ctx.fillStyle = "rgb(255,255,255)";
     ctx.fillRect(mouseX - weight / 2, mouseY - weight / 2, weight, weight);
-    ctx.fillStyle = og;
+    ctx.fillStyle = temp;
   }
 
   if (tool == "fill") {
@@ -114,42 +131,61 @@ const onMouseDown = (event: MouseEvent) => {
   }
 };
 
+const onMouseUp = () => {
+  if (!ctx || !canvas.value) return;
+
+  mouseDown = false;
+
+  // only update canvas when the mouse is released
+  // currently this is important to prevent conflicts in the state of the canvas
+  // revisit this issue later to make the canvas sync in real-time as player draws
+  shareCanvas();
+}
+
 const onMouseMove = (event: MouseEvent) => {
   if (!ctx || !canvas.value) return;
 
+  // update mouse info
   const rect = canvas.value.getBoundingClientRect();
   mouseX = Math.round(event.clientX - rect.left);
   mouseY = Math.round(event.clientY - rect.top);
 
+  // behaviour of each tool on mouse move
   if (tool == "pen" && mouseDown) {
     ctx.fillRect(mouseX - weight / 2, mouseY - weight / 2, weight, weight);
     drawFrom(lastX, lastY, mouseX, mouseY);
-    lastX = mouseX;
-    lastY = mouseY;
   }
   if (tool == "eraser" && mouseDown) {
-    let og = ctx.fillStyle;
+    let temp = ctx.fillStyle;
     ctx.fillStyle = "rgb(255,255,255)";
     ctx.fillRect(mouseX - weight / 2, mouseY - weight / 2, weight, weight);
     drawFrom(lastX, lastY, mouseX, mouseY);
-    ctx.fillStyle = og;
-    lastX = mouseX;
-    lastY = mouseY;
+    ctx.fillStyle = temp;
   }
+
+  // update last position of mouse
+  lastX = mouseX;
+  lastY = mouseY;
 };
 
+// get pixel colour at a coordinate, used for fill tool
 const getPixelColour = (x: number, y: number) => {
   if (!ctx) return [255, 255, 255, 255];
   return ctx.getImageData(x, y, 1, 1).data;
 };
 
+// to draw a line between two points, used in pen tool
 const drawFrom = (x1: number, y1: number, x2: number, y2: number) => {
   if (!ctx) return;
 
+  // calculate x and y differences
   let dx = x2 - x1;
   let dy = y2 - y1;
+
+  // take the larger of the differences as the number of steps
   let steps = Math.max(Math.abs(dx), Math.abs(dy));
 
+  // linear interp between the two points for the number of steps, drawing a rect at each step
   for (let i = 0; i < steps; i++) {
     ctx.fillRect(
       Math.round(x1 + (dx / steps) * i - weight / 2),
@@ -158,51 +194,52 @@ const drawFrom = (x1: number, y1: number, x2: number, y2: number) => {
       weight
     );
   }
-  let imageData;
-  if (ctx) {
-    imageData = ctx.getImageData(0, 0, 500, 500).data.buffer;
-  }
-  socket.emit("canvasImageData", {roomCode, imageData});
 };
 
+// fill from point
 const fill = (start_x: number, start_y: number, target_colour: string) => {
   if (!ctx) return;
 
+  // uses breadth-first search with queue
   let queue = [[start_x, start_y]];
+
+  // create visited array (bitmap)
   let visited = Array.from({ length: canvasHeight }, () => new Array(canvasWidth).fill(false));
 
   visited[start_y][start_x] = true;
 
   while (queue.length > 0) {
+    // remove from first coord from queue and change its pixel colour
     let [x, y] = queue.shift()!;
     setPixelColour(x, y, ctx.fillStyle as string);
 
+    // defines different directions (up, left, down, right)
     let dx = [-1, 1, 0, 0];
     let dy = [0, 0, -1, 1];
 
+    // look in each direction
     for (let i = 0; i < dx.length; i++) {
       let nx = x + dx[i], ny = y + dy[i];
       if (
+        // within bounds
         nx >= 0 && nx < canvasWidth &&
         ny >= 0 && ny < canvasHeight &&
+        // not visited yet
         !visited[ny][nx]
       ) {
+        // if colour is the same as the original, should be filled
         let arr = getPixelColour(nx, ny);
         let colour = `rgb(${arr[0]}, ${arr[1]}, ${arr[2]})`;
         if (colour === target_colour) {
+          // add to queue
           queue.push([nx, ny]);
           visited[ny][nx] = true;
         }
       }
     }
   }
-  let imageData;
-  if (ctx) {
-    imageData = ctx.getImageData(0, 0, 500, 500).data.buffer;
-  }
-  socket.emit("canvasImageData", {roomCode, imageData});
 };
-
+// set pixel colour, used for fill tool
 const setPixelColour = (x: number, y: number, colour: string) => {
   if (!ctx) return;
   ctx.fillStyle = colour;
@@ -219,7 +256,6 @@ const setPixelColour = (x: number, y: number, colour: string) => {
     <button ref="penBtn">Pen</button>
     <button ref="eraserBtn">Eraser</button>
     <button ref="fillBtn">Fill</button>
-    <!--<button ref="shareBtn">Share Canvas</button> -->
   </div>
 </template>
 
