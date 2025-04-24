@@ -89,6 +89,8 @@ onMounted(() => {
   if (undoBtn.value) undoBtn.value.addEventListener("click", undo);
   if (redoBtn.value) redoBtn.value.addEventListener("click", redo);
 
+  if (clearBtn.value) clearBtn.value.addEventListener("click", clear);
+
   // change colour if selected in colour picker
   if (colourPicker.value) colourPicker.value.addEventListener("input", () => {
     if (ctx) ctx.fillStyle = colourPicker.value!.value;
@@ -162,11 +164,19 @@ const onMouseUp = () => {
 
     let imageData;
     if (ctx) {
+      console.log(snapshotIndex)
       snapshotIndex++;
       imageData = ctx.getImageData(0, 0, 500, 500).data.buffer;
       snapshots[snapshotIndex] = imageData;
       console.log(snapshots);
       console.log(snapshotIndex);
+      
+      let i = 1;
+      while (snapshots[snapshotIndex+i]) {
+        i++;
+      }
+      i--;
+      snapshots.splice(snapshotIndex+1, i);
     }
   }
   mouseDown = false;
@@ -291,6 +301,30 @@ const redo = () => {
     let array = new Uint8ClampedArray(snapshots[snapshotIndex]);
     let imageData = new ImageData(array, 500);
     if (ctx) ctx.putImageData(imageData, 0, 0);
+  }
+};
+
+const clear = () => {
+  if (!ctx) return;
+  let temp = ctx.fillStyle;
+  ctx.fillStyle = "rgb(255, 255, 255)";
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+  ctx.fillStyle = temp;
+  shareCanvas();
+
+  let imageData;
+  if (ctx) {
+    console.log("snapped!")
+    snapshotIndex++;
+    imageData = ctx.getImageData(0, 0, 500, 500).data.buffer;
+    snapshots[snapshotIndex] = imageData;
+
+    let i = 1;
+    while (snapshots[snapshotIndex+i]) {
+      i++;
+    }
+    i--;
+    snapshots.splice(snapshotIndex+1, i);
   }
 };
 </script>
