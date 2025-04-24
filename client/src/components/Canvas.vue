@@ -13,6 +13,9 @@ const colourPicker = ref<HTMLInputElement | null>(null);
 const penBtn = ref<HTMLButtonElement | null>(null);
 const eraserBtn = ref<HTMLButtonElement | null>(null);
 const fillBtn = ref<HTMLButtonElement | null>(null);
+const clearBtn = ref<HTMLButtonElement | null>(null);
+const undoBtn = ref<HTMLButtonElement | null>(null);
+const redoBtn = ref<HTMLButtonElement | null>(null);
 const weightSlider = ref<HTMLInputElement | null>(null);
 
 // current selected tool
@@ -34,6 +37,9 @@ let mouseY = 0;
 let mouseDown = false;
 let lastX = 0;
 let lastY = 0;
+
+let snapshots: ArrayBuffer[] = [];
+let snapshotIndex = 0;
 
 // send canvas data to server
 const shareCanvas = () => {
@@ -80,6 +86,9 @@ onMounted(() => {
   if (eraserBtn.value) eraserBtn.value.addEventListener("click", () => (tool = "eraser"));
   if (fillBtn.value) fillBtn.value.addEventListener("click", () => (tool = "fill"));
 
+  if (undoBtn.value) undoBtn.value.addEventListener("click", undo);
+  if (redoBtn.value) redoBtn.value.addEventListener("click", redo);
+
   // change colour if selected in colour picker
   if (colourPicker.value) colourPicker.value.addEventListener("input", () => {
     if (ctx) ctx.fillStyle = colourPicker.value!.value;
@@ -97,6 +106,9 @@ onMounted(() => {
 
   // set default colour
   ctx.fillStyle = colourPicker.value!.value;
+  
+  let imageData = ctx.getImageData(0, 0, 500, 500).data.buffer;
+  snapshots[snapshotIndex] = imageData;
 });
 
 onBeforeUnmount(() => {
@@ -142,12 +154,22 @@ const onMouseDown = (event: MouseEvent) => {
 const onMouseUp = () => {
   if (!ctx || !canvas.value) return;
 
-  mouseDown = false;
-
   // only update canvas when the mouse is released
   // currently this is important to prevent conflicts in the state of the canvas
   // revisit this issue later to make the canvas sync in real-time as player draws
-  shareCanvas();
+  if (mouseDown) {
+    shareCanvas();
+
+    let imageData;
+    if (ctx) {
+      snapshotIndex++;
+      imageData = ctx.getImageData(0, 0, 500, 500).data.buffer;
+      snapshots[snapshotIndex] = imageData;
+      console.log(snapshots);
+      console.log(snapshotIndex);
+    }
+  }
+  mouseDown = false;
 }
 
 const onMouseMove = (event: MouseEvent) => {
@@ -253,6 +275,24 @@ const setPixelColour = (x: number, y: number, colour: string) => {
   ctx.fillStyle = colour;
   ctx.fillRect(x, y, 1, 1);
 };
+
+const undo = () => {
+  if (snapshotIndex > 0) {
+    snapshotIndex--;
+    let array = new Uint8ClampedArray(snapshots[snapshotIndex]);
+    let imageData = new ImageData(array, 500);
+    if (ctx) ctx.putImageData(imageData, 0, 0);
+  }
+};
+
+const redo = () => {
+  if (snapshotIndex < snapshots.length-1) {
+    snapshotIndex++;
+    let array = new Uint8ClampedArray(snapshots[snapshotIndex]);
+    let imageData = new ImageData(array, 500);
+    if (ctx) ctx.putImageData(imageData, 0, 0);
+  }
+};
 </script>
 
 <template>
@@ -264,6 +304,9 @@ const setPixelColour = (x: number, y: number, colour: string) => {
     <button ref="penBtn">Pen</button>
     <button ref="eraserBtn">Eraser</button>
     <button ref="fillBtn">Fill</button>
+    <button ref="clearBtn">Clear</button>
+    <button ref="undoBtn">Undo</button>
+    <button ref="redoBtn">Redo</button>
   </div>
 </template>
 
