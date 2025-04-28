@@ -5,6 +5,7 @@
         <h3>Points</h3>
         <div class="leaderboard-container">
           <div v-if="gameStarted" 
+            
             v-for="(player, i) in leaderboard" 
             :key="i" 
             class="message">
@@ -16,9 +17,11 @@
       <div class="game-info">
         <h1 v-if="!gameStarted">Welcome to Room {{ roomCode }}</h1>
         <p v-if="!gameStarted">Players in this room:</p>
+        <!--
         <p v-if="!gameStarted">
           <input v-model="username" placeholder="Enter Username" />
         </p>
+        -->
         <!--
         <ul v-if="!gameStarted">
           <li v-for="player in players" :key="player">{{ player }}</li>
@@ -63,10 +66,11 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onBeforeUnmount, ref, onMounted, watch } from "vue";
+import { defineComponent, onBeforeUnmount, ref, onMounted} from "vue";
 import type { Ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useSocket } from "../socket.ts";
+import { useUser } from '@clerk/vue';
   
 interface Message {
   sender: string;
@@ -88,7 +92,6 @@ export default defineComponent({
     const gameStarted = ref(false);
     const players = ref<string[]>([]);
     let category: string;
-    const username = ref("");
     const gamePrompt = ref<string | null>(null);
     const leaderboard = ref<Leaderboard[]>([]);
     const mes = ref<Message[]>([]);
@@ -97,21 +100,25 @@ export default defineComponent({
     const curmes = ref("");
     const messageContainer: Ref<HTMLDivElement | null> = ref(null);
     const isDrawer = ref(false);
+    const { user } = useUser();
+    const username = user.value?.username
+    //console.log(username)
 
+    
     onMounted(() => {
       socket.emit("getRoomDetails", {roomCode});
+      
     });
-    watch(username, (user) => {
-      socket.emit("setUser", {roomCode, username: user})
-    });
+    
 
     
     socket.on("roomDetails", (data) => {
       console.log("received room details!")
       leaderboard.value.length = 0; // clear array
       data.players.forEach((player: string) => {
+        console.log(player)
         leaderboard.value.push({
-          username: player,
+          username: username ?? '',
           points: 0,
         })
       });
@@ -139,19 +146,18 @@ export default defineComponent({
     
     const start = () => {
       socket.emit("startGame", {roomCode});
-      //socket.emit("setUser", {roomCode, username: username.value})
+      //socket.emit("setUser", {roomCode, username: username})
     };
 
     const getPrompt = () => {
       socket.emit("getPrompt", {roomCode, category});
     }
-    //bugging
     const sendMessage = () => {
       if (curmes.value.trim() !== "") {
         socket.emit("chatMessage", {
           roomCode,
           message: curmes.value,
-          username: username.value,
+          username: username,
         });
         curmes.value = "";
       }
