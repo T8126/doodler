@@ -292,6 +292,7 @@ const undo = () => {
     let array = new Uint8ClampedArray(snapshots[snapshotIndex]);
     let imageData = new ImageData(array, 500);
     if (ctx) ctx.putImageData(imageData, 0, 0);
+    shareCanvas();
   }
 };
 
@@ -301,6 +302,7 @@ const redo = () => {
     let array = new Uint8ClampedArray(snapshots[snapshotIndex]);
     let imageData = new ImageData(array, 500);
     if (ctx) ctx.putImageData(imageData, 0, 0);
+    shareCanvas();
   }
 };
 
