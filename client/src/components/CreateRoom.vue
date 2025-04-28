@@ -3,10 +3,10 @@
     <h2>Create a Game Room</h2>
     <p>Choose a category for your game:</p>
     <select v-model="category">
-      <option value="" disabled>Select a category</option>
-      <option value="animals">Animals</option>
-      <option value="places">Places</option>
-      <option value="objects">Objects</option>
+      <option value="" disabled>Choose a Skill to Work On</option>
+      <option value="blending">Blending</option>
+      <option value="patching">Patching</option>
+      <option value="stippling">Stippling</option>
     </select>
     <button @click="createGameRoom" :disabled="!category">Create Room</button>
     <button @click="backHome">Back Home</button>
