@@ -6,43 +6,25 @@ const { isSignedIn } = useUser(); */
 </script>
 
 <template>
-  <div id="app">
-    <header>
-      <h1>Doodler</h1>
+  <header>
+    <h1>Doodler</h1>
 
-      <SignedOut>
-        <SignInButton />
-      </SignedOut>
+    <SignedOut>
+      <SignInButton />
+    </SignedOut>
 
-      <SignedIn>
-        <UserButton />
-        <RouterView/>
-      </SignedIn>
-    </header>
-
-    <!--
-    <div v-if="!isSignedIn">
-      <div class="scrolling-text">
-        <div class="content__container">
-          <div class="content__list">
-            <div class="content__list__item">Doodler</div>
-            <div class="content__list__item">Drawing</div>
-            <div class="content__list__item">Practice</div>
-            <div class="content__list__item">Learn</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    -->
-    
-
-    <div class="art-space">
-      <div class="paint-splatter"></div>
-      <div class="paint-splatter large"></div>
-      <div class="paint-splatter triangle"></div>
-      <div class="paint-splatter square"></div>
-      <div class="paint-splatter rectangle"></div>
-    </div>
+    <SignedIn>
+      <UserButton />
+      <RouterView/>
+    </SignedIn>
+  </header>
+  
+  <div class="art-space">
+    <div class="paint-splatter"></div>
+    <div class="paint-splatter large"></div>
+    <div class="paint-splatter triangle"></div>
+    <div class="paint-splatter square"></div>
+    <div class="paint-splatter rectangle"></div>
   </div>
 </template>
 
@@ -52,37 +34,15 @@ const { isSignedIn } = useUser(); */
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Bangers', cursive !important;
   font-weight: bold;
 }
 
 body, html {
-  background: repeating-radial-gradient(
-    circle at random(100%) random (100%),
-    #ff6ec7 0,
-    #ff6ec7 5px,
-    transparent 5px,
-    transparent 10px,
-  );
-  
   height: 100vh;
   width: 100vw;
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-#app {
-  /* find some svg for more cartoony background for later, ask george what he would like*/
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  width: 100vh;
-  height: 100vh;
-  overflow: hidden;
 }
 
 header {
@@ -127,48 +87,6 @@ button:focus {
 }
 
 
-.scrolling-text {
-  position: absolute;
-  top: 30%; 
-  left: 0;
-  right: 0;
-  text-align: center;
-}
-
-.content__container {
-  font-weight: 600;
-  overflow: hidden;
-  white-space: nowrap; 
-}
-
-.content__list {
-  list-style: none;
-  margin-top: 0;
-  padding-left: 110px;
-  text-align: left;
-  animation-name: scroll-left-right;
-  animation-duration: 10s;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  color: #ff69b4; 
-  font-size: 40px; 
-}
-
-.content__list__item {
-  display: inline-block;
-  margin-right: 50px;
-}
-
-@keyframes scroll-left-right {
-  0% {
-    transform: translateX(100%);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
-}
-
-
 .art-space {
   position: absolute;
   top: 0;
@@ -183,41 +101,41 @@ button:focus {
   position: absolute;
   background: rgba(255, 77, 122, 0.7);
   border-radius: 50%;
-  animation: bounce 10s linear infinite alternate;
+ /*animation: bounce 10s linear infinite alternate;*/
 }
 /* u can play around with these values(%) if you want @tim*/
-@keyframes bounce {
+@keyframes large {
   0% {
-    transform: translate(0, 0) rotate (0deg);
-    top: 10%;
-    left: 10%;
+    transform: rotate(0deg);
+    top: 0%;
+    left: 0%;
   }
   25% {
     top: 20%;
-    left: 70%;
+    left: calc(100% - 150px);
   }
   50% {
-    top: 80%;
-    left: 60%;
+    top: 40%;
+    left: 0%;
   }
   75% {
-    top: 50%;
-    left: 20%;
+    top: 60%;
+    left: calc(100% - 150px);
   }
   100% {
-    top: 30%;
-    left: 90%;
+    top: 80%;
+    left: 0%;
     transform: rotate(720deg);
   }
 }
-
-
   
 .paint-splatter.large {
   width: 150px;
   height: 150px;
   left: 5%;
   top: 35%;
+  border-radius: 0%;
+  animation: large 10s linear infinite alternate;
 }
 
 .paint-splatter.triangle {
@@ -244,23 +162,5 @@ button:focus {
   background-color: rgba(0, 255, 77, 0.7);
   left: 20%;
   top: 70%;
-}
-/* useless now, if we want to revert back to this it is always here*/
-@keyframes paint-effect {
-  0% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  25% {
-    transform: translate(30px, -30px) rotate(180deg);
-  }
-  50% {
-    transform: translate(-40px, 40px) rotate(360deg);
-  }
-  75% {
-    transform: translate(-50px, -20px) rotate(540deg);
-  }
-  100% {
-    transform: translate(0, 0) rotate(720deg);
-  }
 }
 </style>

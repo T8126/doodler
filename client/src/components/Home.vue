@@ -18,11 +18,11 @@ const navigateToJoinRoom = () => {
 <template>
   <div v-if="isSignedIn">
     <h1>Welcome, {{ user?.username }}!</h1>
-    <button @click="navigateToJoinRoom">Join Game Room</button>
-    <button @click="navigateToCreateRoom">Create Game Room</button>
+    <button @click="navigateToJoinRoom">Join Room</button>
+    <button @click="navigateToCreateRoom">Create Room</button>
   </div>
   <div v-else>
-    <h1>shouldnt happen</h1>
+    <h1>Signin error, please try again</h1>
   </div>
 </template>
 
