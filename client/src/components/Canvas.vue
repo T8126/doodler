@@ -335,14 +335,18 @@ const clear = () => {
   <div>
     <canvas ref="canvas"></canvas>
     <br />
-    <input type="color" ref="colourPicker" />
-    <input type="range" ref="weightSlider" min="1" max="20" value="5" />
-    <button ref="penBtn">Pen</button>
-    <button ref="eraserBtn">Eraser</button>
-    <button ref="fillBtn">Fill</button>
-    <button ref="clearBtn">Clear</button>
-    <button ref="undoBtn">Undo</button>
-    <button ref="redoBtn">Redo</button>
+    <div>
+      <input type="color" ref="colourPicker" />
+      <input type="range" ref="weightSlider" min="1" max="20" value="5" />
+    </div>
+    <div>
+      <button ref="penBtn">Pen</button>
+      <button ref="eraserBtn">Eraser</button>
+      <button ref="fillBtn">Fill</button>
+      <button ref="clearBtn">Clear</button>
+      <button ref="undoBtn">Undo</button>
+      <button ref="redoBtn">Redo</button>
+    </div>
   </div>
 </template>
 
@@ -350,5 +354,9 @@ const clear = () => {
 canvas {
   border: 1px solid black;
   background-color: white;
+}
+
+button {
+  margin: 5px;
 }
 </style>

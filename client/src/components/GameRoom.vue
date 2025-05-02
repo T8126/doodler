@@ -16,20 +16,17 @@
         </div>
       <div class="game-info">
         <h1 v-if="!gameStarted">Welcome to Room {{ roomCode }}</h1>
-        <p v-if="!gameStarted">Players in this room:</p>
         <!--
         <p v-if="!gameStarted">
           <input v-model="username" placeholder="Enter Username" />
         </p>
         -->
-        <!--
         <ul v-if="!gameStarted">
           <li v-for="player in players" :key="player">{{ player }}</li>
         </ul>
-        -->
-        <button @click="start" :disabled="!username">Start</button>
+        <button @click="start" :disabled="!username" v-if="!gameStarted">Start</button>
         <!-- do a v-if here to check if they are drawer, we need to make the distinction-->
-        <button @click="getPrompt" :disabled="!username">Get Prompt</button>
+        <button @click="getPrompt" :disabled="!username" v-if="gameStarted && isDrawer">Get New Prompt</button>
 
         <div v-if="gameStarted && isDrawer" class="prompt-box">Prompt: {{ gamePrompt }}</div>
 
@@ -146,6 +143,7 @@ export default defineComponent({
     
     const start = () => {
       socket.emit("startGame", {roomCode});
+      socket.emit("getPrompt", {roomCode, category});
       //socket.emit("setUser", {roomCode, username: username})
     };
 
