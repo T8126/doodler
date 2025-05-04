@@ -104,6 +104,9 @@ export default defineComponent({
     
     onMounted(() => {
       socket.emit("getRoomDetails", {roomCode});
+      if (username) {
+        socket.emit("setUser", {roomCode, username: username})
+      }
       
     });
     
@@ -112,11 +115,11 @@ export default defineComponent({
     socket.on("roomDetails", (data) => {
       console.log("received room details!")
       leaderboard.value.length = 0; // clear array
-      data.players.forEach((player: string) => {
+      data.players.forEach((player: {username: string, points: number}) => {
         console.log(player)
         leaderboard.value.push({
-          username: username ?? '',
-          points: 0,
+          username: player.username,
+          points: player.points,
         })
       });
       category = data.category;
