@@ -47,7 +47,7 @@ const { isSignedIn } = useUser(); */
 </template>
 
 <style scoped>
-  /* css was inspired by other works(cartoony effect, animations)*/
+  /* ChatGPT was used in the creation of this css with fixing issues*/
 * {
   margin: 0;
   padding: 0;
