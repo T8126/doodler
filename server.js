@@ -91,8 +91,12 @@ io.on("connection", (socket) => {
       console.log("sent room details!")
       const room = rooms[roomCode];
 
+
       io.to(roomCode).emit("roomDetails", {
-        players: room.players.map(players => players.username || players.socketId),
+        players: room.players.map(players => ({
+          username: players.username || players.socketId,
+          points: room.points[players.socketId]
+        })),
         category: room.category,
         drawerId: room.players[room.drawerIndex]?.socketId
       });
@@ -155,7 +159,10 @@ io.on("connection", (socket) => {
     }
 
     io.to(roomCode).emit("roomDetails", {
-      players: room.players.map(players => players.username || players.socketId),
+      players: room.players.map(players => ({
+        username: players.username || players.socketId,
+        points: room.points[players.socketId]
+      })),
       category: room.category,
       drawerId: room.players[room.drawerIndex]?.socketId,
     })
@@ -214,15 +221,28 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     for (const roomCode in rooms) {
       const room = rooms[roomCode];
+      const pIndex = room.players.findIndex(players => players.socketId === socket.id);
+      if (pIndex !== -1){
+        const [dc] = room.players.splice(pIndex, 1);
+        io.to(roomCode).emit("chatMessage", {
+          sender: "System",
+          message: `${dc.username} left the room`
+        });
+        delete room.points[dc.socketId];
+      }
+      /*
       if (room && room.players.find(players => players.socketId === socket.id)) {
         room.players = room.players.filter((id) => id !== socket.id);
         delete room.points[socket.id]
-        if (room.players.length === 0) {
-          delete rooms[roomCode];
+      */
+      if (room.players.length === 0) {
+        delete rooms[roomCode];
         }
+
+        
+      
         break;
       }
-    }
   });
 });
 
