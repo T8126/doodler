@@ -7,7 +7,7 @@ const socket = useSocket();
 const route = useRoute();
 const roomCode = route.params.roomCode as string;
 
-// access elements through refs
+// access HTML elements through refs
 const canvas = ref<HTMLCanvasElement | null>(null);
 const colourPicker = ref<HTMLInputElement | null>(null);
 const penBtn = ref<HTMLButtonElement | null>(null);
@@ -18,30 +18,36 @@ const undoBtn = ref<HTMLButtonElement | null>(null);
 const redoBtn = ref<HTMLButtonElement | null>(null);
 const weightSlider = ref<HTMLInputElement | null>(null);
 
-// current selected tool
-let tool = "pen";
+// current tool selected by player, default is pen
+let tool: string = "pen";
 
-// canvas context
+// canvas context - object that allows us to call methods on the canvas element
+// currently set to null as the canvas element is not mounted
 let ctx: CanvasRenderingContext2D | null = null;
 
-// tool weight
-let weight = 5;
+// the weight of the current selected tool in pixels
+let weight: number = 5;
 
-// canvas size
-const canvasWidth = 500;
-const canvasHeight = 500;
+// dimensions of the canvas element in pixels
+const canvasWidth: number = 500;
+const canvasHeight: number = 500;
 
-// mouse info
-let mouseX = 0;
-let mouseY = 0;
-let mouseDown = false;
-let lastX = 0;
-let lastY = 0;
+// various variables relating to the state of the mouse pointer
+let mouseX: number = 0;
+let mouseY: number = 0;
+let mouseDown: boolean = false;
+// indicates the last recorded position of the mouse, while mouseX and mouseY are the current positions
+let lastX: number = 0;
+let lastY: number = 0;
 
+// used the undo and redo system
+// snapshots is an array containing every state of the canvas in game so far
+// snapshotIndex is the index of the snapshot displayed on the drawer's canvas (usually the most recent snapshot unless they have just undone an action)
 let snapshots: ArrayBuffer[] = [];
-let snapshotIndex = 0;
+let snapshotIndex: number = 0;
 
-// send canvas data to server
+// function called to send the local snapshot of the canvas to the server
+// the server then broadcasts this to every player
 const shareCanvas = () => {
   let imageData;
   if (ctx) {
@@ -50,14 +56,14 @@ const shareCanvas = () => {
   socket.emit("canvasImageData", {roomCode, imageData});
 };
 
-// receive canvas data from server and display it
+// callback that displays canvas data received from the server onto the canvas
 socket.on("getImageData", (data) => {
   let array = new Uint8ClampedArray(data);
   let imageData = new ImageData(array, 500);
   if (ctx) ctx.putImageData(imageData, 0, 0);
 });
 
-// clear canvas when drawer changes
+// callback for when the drawer changes - 
 socket.on("drawerChanged", () => {
   if (!ctx) return;
   let temp = ctx.fillStyle;
@@ -164,12 +170,9 @@ const onMouseUp = () => {
 
     let imageData;
     if (ctx) {
-      console.log(snapshotIndex)
       snapshotIndex++;
       imageData = ctx.getImageData(0, 0, 500, 500).data.buffer;
       snapshots[snapshotIndex] = imageData;
-      console.log(snapshots);
-      console.log(snapshotIndex);
       
       let i = 1;
       while (snapshots[snapshotIndex+i]) {
@@ -316,7 +319,6 @@ const clear = () => {
 
   let imageData;
   if (ctx) {
-    console.log("snapped!")
     snapshotIndex++;
     imageData = ctx.getImageData(0, 0, 500, 500).data.buffer;
     snapshots[snapshotIndex] = imageData;
