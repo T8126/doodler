@@ -59,4 +59,4 @@ Permission is given to fork this repository and contribute to the project. Here 
 
 React out to:
 - pydjeon / surya.suthakar@gmail.com
-- t8126 / bobbyjoe5261941@gmail.com
+- t8126 / timothyriddolls@gmail.com
