@@ -24,20 +24,19 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "client", "dist", "index.html"));
 });
 
+// function to generate room codes
+// 0s, 0s, 1s are replaced by Xs to prevent confusion
 const generateRoomCode = () => {
-  // don't inlude 0s and Os because they can be confused (or choose font in frontend where they are easily distinguishable) - same thing for 1s and ls.
-  //ok yeah now replaces with X
   const code = Math.random().toString(36).substr(2, 6).toUpperCase(); 
-  const validcode = code.replace(/[0O1l]/g, 'X'); 
-  if (code != validcode) 
-    { 
-      console.log(`${code}, ${validcode}`) 
-    } 
-  return validcode;
+  const validCode = code.replace(/[0O1]/g, 'X'); 
+  
+  return validCode;
 };
 
+// triggers when a user connects to the website
 io.on("connection", (socket) => {
 
+  // event for users creating rooms
   socket.on("createRoom", ({ category }) => {
     if (!category) {
       socket.emit("createRoomError", "no category selected");
@@ -45,7 +44,6 @@ io.on("connection", (socket) => {
     }
 
     let roomCode;
-
     do {
       roomCode = generateRoomCode();
     } while (rooms[roomCode]);
@@ -55,7 +53,6 @@ io.on("connection", (socket) => {
       players: [],
       points: {},
       category: category,
-      host: socket.id,
       drawerIndex: 0,
       currentPrompt: null,
       totalRounds: 3,
@@ -65,99 +62,105 @@ io.on("connection", (socket) => {
     socket.emit("createdRoom", { roomCode });
   });
 
-    socket.on("joinRoom", ({ roomCode }) => {
-      // Should also check if player is already in a room
+  // event for users joining rooms
+  socket.on("joinRoom", ({ roomCode }) => {
+    const room = rooms[roomCode];
 
-      const room = rooms[roomCode];
+    if (!room) {
+      socket.emit("joinRoomError", `room ${roomCode} does not exist`);
+      return;
+    }
 
-      if (!room) {
-        socket.emit("joinRoomError", `room ${roomCode} does not exist`);
-        return;
-      }
+    // different from the room object, it is a socket.io feature that allows for broadcasting
+    socket.join(roomCode);
 
-      socket.join(roomCode);
-      console.log(`joined ${roomCode}`)
+    // usernames are currently null because they are set with clerk usernames later in the 'setUser' socket callback
+    room.players.push({socketId: socket.id, username: null});
 
-      room.players.push({socketId: socket.id, username: null});
-      //socket.emit("setUsername", { roomCode, username: username.value});
+    room.points[socket.id] = 0;
 
-      
-      room.points[socket.id] = 0;
+    console.log(`${socket.id} joined ${roomCode}`);
 
-      socket.emit("joinedRoom", { roomCode });
-    });
-
-    socket.on("getRoomDetails", ({roomCode}) => {
-      console.log("sent room details!")
-      const room = rooms[roomCode];
-
-
-      io.to(roomCode).emit("roomDetails", {
-        players: room.players.map(players => ({
-          username: players.username || players.socketId,
-          points: room.points[players.socketId]
-        })),
-        category: room.category,
-        drawerId: room.players[room.drawerIndex]?.socketId
-      });
-    });
-
-    socket.on("startGame", ({ roomCode }) => {
-      // Should in future also check if the player is the host
-
-      const room = rooms[roomCode];
-
-      if (!room) {
-        return;
-      }
-
-      if (!room.players.find(players => players.socketId === socket.id)) {
-        return;
-      }
-
-      console.log(`Room ${roomCode} started game`)
-
-      io.to(roomCode).emit("gameStarted");
+    socket.emit("joinedRoom", { roomCode });
   });
 
+  // event for when players request room details before the game starts (player list, points, category, first drawer)
+  socket.on("getRoomDetails", ({roomCode}) => {
+    const room = rooms[roomCode];
+
+    io.to(roomCode).emit("roomDetails", {
+      players: room.players.map(players => ({
+        username: players.username || players.socketId,
+        points: room.points[players.socketId]
+      })),
+      category: room.category,
+      drawerId: room.players[room.drawerIndex]?.socketId
+    });
+  });
+
+  // event to start a game
+  socket.on("startGame", ({ roomCode }) => {
+
+    const room = rooms[roomCode];
+
+    if (!room) {
+      return;
+    }
+
+    if (!room.players.find(players => players.socketId === socket.id)) {
+      return;
+    }
+
+    console.log(`Room ${roomCode} started the game`);
+
+    io.to(roomCode).emit("gameStarted");
+  });
+
+  // event to generate a new prompt for a room
   socket.on("getPrompt", ({ roomCode, category }) => {
     if (!category) {
-      socket.emit("noPrompts", "no cat");
+      socket.emit("noPrompts", "no category");
       return;
     }
 
     const room = rooms[roomCode];
+
     if (room && room.category === category) {
       const prompt = gameLogic.prompt(category);
       if (prompt) {
-        // Store the current prompt in the room for guess checking
+        // prompt is stored in the room to validate guesses
         room.currentPrompt = prompt;
         io.to(roomCode).emit("newPrompt", prompt);
       } else {
-        socket.emit("noPrompts", `no ${category}`);
+        socket.emit("noPrompts", `error when generating prompt`);
       }
     } else {
-      socket.emit("noRoom", `no ${roomCode} `);
+      socket.emit("noRoom", `no room ${roomCode} or incorrect category`);
     }
   });
 
+  // canvas data received from the drawer which is then broadcasted to all players
   socket.on("canvasImageData", ({ roomCode, imageData }) => {
     let room = rooms[roomCode];
-    if (socket.id == room.players[room.drawerIndex]?.socketId) { /* if socket request is from drawer */
+    if (socket.id == room.players[room.drawerIndex]?.socketId) {
       io.to(roomCode).emit("getImageData", imageData);
     }
   });
 
+  // event to set the username for a player (based on clerk usernames)
   socket.on("setUser", ({ roomCode, username}) => {
     const room = rooms[roomCode];
+
     if (!room) {
       return;
     }
+
     const player = room.players.find(players => players.socketId === socket.id)
-    if(player) {
+    if (player) {
       player.username = username;
     }
 
+    // room details are resent to all players so that they have the most recent username info
     io.to(roomCode).emit("roomDetails", {
       players: room.players.map(players => ({
         username: players.username || players.socketId,
@@ -168,28 +171,30 @@ io.on("connection", (socket) => {
     })
     
   });
-
-
   
-  // after guessing correctly, can't send messages
-  // make it so only guesser can send messages
+  // used for any chat messages (player and system messages), and checks for correct guesses, including drawer switching logic
   socket.on("chatMessage", ({ roomCode, message, username }) => {
     const room = rooms[roomCode];
+    
     if (room && room.players.find(players => players.socketId === socket.id)) {
-      console.log(`test: ${socket.id.substring(0, 6)}: ${message}`);
+
       io.to(roomCode).emit("chatMessage", {
-        //sender: socket.id.substring(0, 6), 
-        sender: username, //
+        sender: username,
         message: message
       });
+
+      console.log(`${socket.id || username}: ${message}`);
+
       if (room.currentPrompt && message.toLowerCase().includes(room.currentPrompt.toLowerCase()) && socket.id != room.players[room.drawerIndex].socketId) {
-        console.log("guessed prompt")
+        console.log(`${socket.id || username} guessed prompt`);
+
         io.to(roomCode).emit("chatMessage", {
           sender: "System",
           message: `${username} guessed correctly!`
         });
+
         let drawer = room.players[room.drawerIndex];
-        room.points[drawer.socketId] += 1000;
+        room.points[drawer.socketId] += 1000; // points added to drawer not guesser
 
         io.to(roomCode).emit("updatePoints", {
           player: drawer.username,
@@ -197,7 +202,7 @@ io.on("connection", (socket) => {
         });
 
         room.drawerIndex++;
-        room.drawerIndex %= room.players.length;
+        room.drawerIndex %= room.players.length; // modulo necessary when index increased past number of players
 
         if (room.drawerIndex == 0) {
           room.currentRound += 1
@@ -218,11 +223,13 @@ io.on("connection", (socket) => {
     }
   });
 
+  // triggers when players leave the website
   socket.on("disconnect", () => {
     for (const roomCode in rooms) {
       const room = rooms[roomCode];
       const pIndex = room.players.findIndex(players => players.socketId === socket.id);
-      if (pIndex !== -1){
+
+      if (pIndex !== -1) {
         const [dc] = room.players.splice(pIndex, 1);
         io.to(roomCode).emit("chatMessage", {
           sender: "System",
@@ -230,17 +237,10 @@ io.on("connection", (socket) => {
         });
         delete room.points[dc.socketId];
       }
-      /*
-      if (room && room.players.find(players => players.socketId === socket.id)) {
-        room.players = room.players.filter((id) => id !== socket.id);
-        delete room.points[socket.id]
-      */
+
       if (room.players.length === 0) {
         delete rooms[roomCode];
         }
-
-        
-      
         break;
       }
   });

@@ -1,8 +1,5 @@
 <script setup lang="ts">
-/*import { ref } from 'vue' */
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/vue'
-/*import { useUser } from '@clerk/vue';
-const { isSignedIn } = useUser(); */
 </script>
 
 <template>
@@ -19,22 +16,6 @@ const { isSignedIn } = useUser(); */
         <RouterView/>
       </SignedIn>
     </header>
-
-    <!--
-    <div v-if="!isSignedIn">
-      <div class="scrolling-text">
-        <div class="content__container">
-          <div class="content__list">
-            <div class="content__list__item">Doodler</div>
-            <div class="content__list__item">Drawing</div>
-            <div class="content__list__item">Practice</div>
-            <div class="content__list__item">Learn</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    -->
-    
 
     <div class="art-space">
       <div class="paint-splatter"></div>
@@ -73,7 +54,6 @@ body, html {
 }
 
 #app {
-  /* find some svg for more cartoony background for later, ask george what he would like*/
   background: rgba(255, 255, 255, 0.9);
   border-radius: 15px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
@@ -135,40 +115,6 @@ button:focus {
   text-align: center;
 }
 
-.content__container {
-  font-weight: 600;
-  overflow: hidden;
-  white-space: nowrap; 
-}
-
-.content__list {
-  list-style: none;
-  margin-top: 0;
-  padding-left: 110px;
-  text-align: left;
-  animation-name: scroll-left-right;
-  animation-duration: 10s;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  color: #ff69b4; 
-  font-size: 40px; 
-}
-
-.content__list__item {
-  display: inline-block;
-  margin-right: 50px;
-}
-
-@keyframes scroll-left-right {
-  0% {
-    transform: translateX(100%);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
-}
-
-
 .art-space {
   position: absolute;
   top: 0;
@@ -185,7 +131,7 @@ button:focus {
   border-radius: 50%;
   animation: bounce 10s linear infinite alternate;
 }
-/* u can play around with these values(%) if you want @tim*/
+
 @keyframes bounce {
   0% {
     transform: translate(0, 0) rotate (0deg);
@@ -210,8 +156,6 @@ button:focus {
     transform: rotate(720deg);
   }
 }
-
-
   
 .paint-splatter.large {
   width: 150px;
@@ -245,22 +189,5 @@ button:focus {
   left: 20%;
   top: 70%;
 }
-/* useless now, if we want to revert back to this it is always here*/
-@keyframes paint-effect {
-  0% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  25% {
-    transform: translate(30px, -30px) rotate(180deg);
-  }
-  50% {
-    transform: translate(-40px, 40px) rotate(360deg);
-  }
-  75% {
-    transform: translate(-50px, -20px) rotate(540deg);
-  }
-  100% {
-    transform: translate(0, 0) rotate(720deg);
-  }
-}
+
 </style>
