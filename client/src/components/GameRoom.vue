@@ -5,7 +5,6 @@
         <h3>Points</h3>
         <div class="leaderboard-container">
           <div v-if="gameStarted" 
-            
             v-for="(player, i) in leaderboard" 
             :key="i" 
             class="message">
@@ -16,27 +15,14 @@
         </div>
       <div class="game-info">
         <h1 v-if="!gameStarted">Welcome to Room {{ roomCode }}</h1>
-        <!--
-        <p v-if="!gameStarted">
-          <input v-model="username" placeholder="Enter Username" />
-        </p>
-        -->
         <ul v-if="!gameStarted">
           <li v-for="player in players" :key="player">{{ player }}</li>
         </ul>
         <button @click="start" :disabled="!username" v-if="!gameStarted">Start</button>
-        <!-- do a v-if here to check if they are drawer, we need to make the distinction-->
         <button @click="getPrompt" :disabled="!username" v-if="gameStarted && isDrawer">Get New Prompt</button>
-
         <div v-if="gameStarted && isDrawer" class="prompt-box">Prompt: {{ gamePrompt }}</div>
-
-        <!-- Will need to make a side tab on left for points display, also need to discuss how points will be awarded-->
         <Canvas v-if="gameStarted"></Canvas>
       </div>
-
-
-      
-
       <div class="chat-container">
         <h3>Chat</h3>
         <div class="mes-container" ref="messageContainer">
@@ -44,8 +30,7 @@
             v-for="(message, i) in mes" 
             :key="i" 
             class="message"
-            :class="{ 'system-message': message.sender === 'System' }"
-          >
+            :class="{ 'system-message': message.sender === 'System' }">
             <strong>{{ message.sender }}:</strong> {{ message.text }}
           </div>
         </div>
@@ -84,6 +69,7 @@ export default defineComponent({
     const router = useRouter();
     const route = useRoute();
 
+    // refs to dynamically change values in HTML elmements
     const roomCode = route.params.roomCode as string;
     const socket = useSocket();
     const gameStarted = ref(false);
@@ -92,36 +78,31 @@ export default defineComponent({
     const gamePrompt = ref<string | null>(null);
     const leaderboard = ref<Leaderboard[]>([]);
     const mes = ref<Message[]>([]);
-    // use quotes or apostrophes but keep it consistent ;(
-    // mb lol - i usually use quotes
     const curmes = ref("");
     const messageContainer: Ref<HTMLDivElement | null> = ref(null);
     const isDrawer = ref(false);
     const { user } = useUser();
     const username = user.value?.username
-    //console.log(username)
-
     
+    // set player's username based on clerk username
     onMounted(() => {
       socket.emit("getRoomDetails", {roomCode});
       if (username) {
         socket.emit("setUser", {roomCode, username: username})
       }
-      
     });
     
-
-    
+    // update leaderboard, current data, and cateogry
     socket.on("roomDetails", (data) => {
-      console.log("received room details!")
-      leaderboard.value.length = 0; // clear array
+      leaderboard.value.length = 0; // clears array
+
       data.players.forEach((player: {username: string, points: number}) => {
-        console.log(player)
         leaderboard.value.push({
           username: player.username,
           points: player.points,
         })
       });
+
       category = data.category;
 
       if (data.drawerId == socket.id) {
@@ -131,8 +112,8 @@ export default defineComponent({
       }
     });
 
+    // update points (after drawer switch)
     socket.on("updatePoints", (data) => {
-      console.log(data)
       leaderboard.value.forEach((player) => {
         if (player.username == data.player) {
           player.points = data.points;
@@ -140,19 +121,23 @@ export default defineComponent({
       });
     });
 
+    // switch to end screen
     socket.on("gameFinished", () => {
       router.push("/finished");
     });
     
+    // when start button is pressed (by any player)
     const start = () => {
       socket.emit("startGame", {roomCode});
       socket.emit("getPrompt", {roomCode, category});
-      //socket.emit("setUser", {roomCode, username: username})
     };
 
+    // request a prompt by pressing Get Prompt button
     const getPrompt = () => {
       socket.emit("getPrompt", {roomCode, category});
-    }
+    };
+
+    // sending a message in chat
     const sendMessage = () => {
       if (curmes.value.trim() !== "") {
         socket.emit("chatMessage", {
@@ -164,34 +149,37 @@ export default defineComponent({
       }
     };
 
+    // receive a prompt from server after request
     socket.on("newPrompt", (prompt) => {
       gamePrompt.value = prompt;
     });
 
+    // receive game start broadcast
     socket.on("gameStarted", () => {
-      console.log("game started!");
       gameStarted.value = true;
     });
 
+    // when a chat message is received
     socket.on("chatMessage", (data) => {
       mes.value.push({
         sender: data.sender,
         text: data.message
       });
+
       if (messageContainer.value) {
-        messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
+        messageContainer.value.scrollTop = messageContainer.value.scrollHeight; // scroll to message
       }
     });
-    //
-    /* we might needa implement some cooldown for switching drawers*/
+
+    // when drawer switches - send (local) system message and if drawer get a new prompt
     socket.on("drawerChanged", (data) => {
       mes.value.push({
         sender: "System",
         text: `New drawer: ${data.newDrawerName}`
       });
+
       if (data.newDrawerId === socket.id) {
         isDrawer.value = true;
-        /* fix it telling you as a pop-up message*/
         getPrompt();
       } else {
         isDrawer.value = false;

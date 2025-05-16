@@ -282,6 +282,7 @@ const fill = (start_x: number, start_y: number, target_colour: string) => {
     }
   }
 };
+
 // set pixel colour, used for fill tool
 const setPixelColour = (x: number, y: number, colour: string) => {
   if (!ctx) return;
@@ -289,6 +290,7 @@ const setPixelColour = (x: number, y: number, colour: string) => {
   ctx.fillRect(x, y, 1, 1);
 };
 
+// move backwards in the snapshots array by decrementing the index
 const undo = () => {
   if (snapshotIndex > 0) {
     snapshotIndex--;
@@ -299,6 +301,7 @@ const undo = () => {
   }
 };
 
+// move forwards in the snapshots array by incrementing the index
 const redo = () => {
   if (snapshotIndex < snapshots.length-1) {
     snapshotIndex++;
@@ -309,6 +312,7 @@ const redo = () => {
   }
 };
 
+// function to clear screen - draws a white rectangle over the full screen and then broadcasts the new canvas data
 const clear = () => {
   if (!ctx) return;
   let temp = ctx.fillStyle;

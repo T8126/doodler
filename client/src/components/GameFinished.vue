@@ -14,9 +14,6 @@ const backHome = () => {
   router.push('/');
 };
 
-// maybe we can return them to the same room, but we would probably have to remove this page then because there's no point
-// I was planning to have this page show their scores in like a leaderboard
-// would have to somehow tie it to the room tho
 const playAgain = () => {
     router.push('/create')
 }

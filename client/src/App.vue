@@ -28,7 +28,7 @@ import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/vue'
 </template>
 
 <style scoped>
-  /* ChatGPT was used in the creation of this css with fixing issues*/
+/* ChatGPT was used in the creation of this CSS and with fixing issues */
 * {
   margin: 0;
   padding: 0;

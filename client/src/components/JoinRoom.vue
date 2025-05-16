@@ -19,7 +19,6 @@ const backHome = () => {
 };
 
 const joinRoom = () => {
-  // should convert room code to all caps to make non case-sensitive
   socket.emit("joinRoom", { roomCode: roomCode.value });
 }
 
@@ -28,7 +27,6 @@ socket.on("joinRoomError", (data) => {
 });
 
 socket.on("joinedRoom", (data) => {
-  console.log("received");
   router.push({ name: "GameRoom", params: { roomCode: data.roomCode } });
 });
 </script>

@@ -28,12 +28,13 @@ const backHome = () => {
   router.push('/');
 };
 
+// not clear why the function is async, likely from an old version of the code
 const createGameRoom = async () => {
   if (!category.value) {
     error.value = "select a category";
     return;
   }
-  console.log(category.value);
+
   socket.emit("createRoom", { category: category.value });
 
   socket.on("createdRoom", (data) => {

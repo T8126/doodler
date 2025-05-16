@@ -21,9 +21,6 @@ const navigateToJoinRoom = () => {
     <button @click="navigateToJoinRoom">Join Game Room</button>
     <button @click="navigateToCreateRoom">Create Game Room</button>
   </div>
-  <div v-else>
-    <h1>shouldnt happen</h1>
-  </div>
 </template>
 
 <style scoped>
