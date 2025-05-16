@@ -16,11 +16,11 @@ Doodler is a multiplayer art game that aims for users to improve their art skill
 
 1. Clone the repository:
 
-   go to your shell and type: git clone https://github.com/T8126/doodler-recovery.git
+   go to your shell and type: git clone https://github.com/T8126/doodler.git
 
 2. Navigate to the project directory:
    
-   cd doodler-recovery
+   cd doodler
 
 3. Install dependencies:
 
