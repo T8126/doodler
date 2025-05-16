@@ -27,15 +27,21 @@ Doodler is a multiplayer art game that aims for users to improve their art skill
    npm install
    
    cd client -> npm install
+   
+4. Get a Clerk API Key:
 
-4. Start the app:
+   Create a file in the client folder called .env.local
+
+   In this file, write: VITE_CLERK_PUBLISHABLE_KEY= (key)
+
+6. Start the app:
 
    cd client -> npm run start (or npm run build if testing)
    
    cd .. -> node server.js
    
 
-5. Now that it is running, visit http://localhost:3000 in your browser
+7. Now that it is running, visit http://localhost:3000 in your browser
 
 ## Usage
 To use Doodler, you must sign up using clerk authentication. After an account is created, you can either create a game room or join a game room. If creating, you must select a skill you want to work on then create it. This will generate a unique alphanumeric code for you to give to the other players that want to join. Once the players have joined, you can press start, and the game will be started. The drawer is given a prompt and the guesser must guess that prompt, where they will guess in the chat. If the guesser guesses the prompt correctly, a new drawer is chosen and points are awarded.
